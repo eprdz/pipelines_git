@@ -1,0 +1,166 @@
+---
+title: "tarea2"
+author: "Enrique Presa"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tarea2}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+doAll=FALSE
+```
+
+# Tarea 2
+## Carga de paquetes
+Cargamos todos los paquetes que van a servir a lo largo del estudio. Utilizamos la funcion p_load del paquete pacman debido a que si no está el paquete en la librería intenta descargarlo desde CRAN u otro repositorio.
+
+```{r, eval=doAll, results="hide"}
+pacman::p_load(Biobase, enriquepresa, genefilter, limma, ReportingTools)
+```
+
+## Carga del Expression set
+En primer lugar es necesario cargar el Expression set del estudio en cuestión, que es el GSE50467, y que ya ha sido normalizado y que ha pasado unos controles de calidad.
+
+```{r, eval=doAll, results="hide"}
+data(Eset50467, package="enriquepresa")
+```
+
+## T-test con varianzas iguales
+En primer lugar, se va a observar qué genes se expresan diferencialmente mediante un t-test suponiendo varianzas iguales. Los dos grupos que tiene este experimento para comparar son ambos líneas celulares idénticas pero a un grupo no se le ha aplicado ningún compuesto y al otro se le ha aplicado doxiciclina para sobreexpresar el gen SRSF2, y se quiere estudiar qué genes se ven afectados por este cambio en la expresión de este gen. Por tanto, se va a hacer un test-t para cada sonda del microarray teniendo en cuenta estos dos grupos. Se va a hacer mediante la función *rowttests* del paquete genefilter, y se va a obtener un primer data frame en el que se observa el valor del estadístico t,la diferencia de medias de cada grupo (*dm*) y el p-valor observado para cada sonda. El nombre de las filas es el *probe id*. En realidad, la columna *dm* debería ser llamada *LogFC*, debido a que el Expression Set ya tiene el logaritmo en base 2 de la expresión debido a una corrección de fondo que se ha hecho en el Expression Set de tipo *normexp*.
+
+```{r, eval=doAll}
+grupos = pData(Eset50467)[,"FactorValue..compound."]
+genefilter_df = rowttests(Eset50467, grupos)
+colnames(genefilter_df)[2] = "LogFC"
+head(genefilter_df)
+```
+
+#### Comparaciones múltiples
+Debido a que no se hace una sola observación, sino que se hace tantas observaciones como sondas válidas tenga el microarray, es necesario hacer un ajuste del p-valor, tanto por el método de Benjamini-Hochberg, como por el método de Bonferroni, que es más conservador.
+
+```{r, eval=doAll}
+BH = p.adjust(genefilter_df$p.value, method = "BH")
+Bonferroni = p.adjust(genefilter_df$p.value, method = "bonferroni")
+genefilter_df = cbind(genefilter_df, BH, Bonferroni)
+genefilter_df = genefilter_df[order(BH),] #Se ordenan las filas en orden decreciente según el adj. p-value según el método BH
+```
+
+#### Obtención de URL's a ENTREZ y ENSEMBL
+Para obtener un estudio más explicativo, es necesario que el investigador al que se le van a pasar los resultados tenga un acceso directo a la información que pueden incorporar ENTREZ y ENSEMBL, por lo que será necesario incorporar las URL's de los genes a ENTREZ y ENSEMBL. Para ello, se han utilizado dos funciones homólogas a las dos incorporadas en el paquete *tami*. Por otra parte, también se considera necesario incorporar el nombre del gen al data frame (*SYMBOL* en el fData).
+
+```{r, eval=doAll}
+fd = fData(Eset50467)
+entrezids = sapply(rownames(genefilter_df), function(x){fd[fd$PROBEID==x,"ENTREZID"]})
+ENTREZ_URL = sapply(entrezids, entrezurl)
+ensemblids = sapply(rownames(genefilter_df), function(x){fd[fd$PROBEID==x,"ENSEMBL"]})
+ENSEMBL_URL = sapply(ensemblids, ensemblurl)
+SYMBOL = sapply(rownames(genefilter_df), function(x){fd[fd$PROBEID==x,"SYMBOL"]})
+
+genefilter_df = cbind(SYMBOL, genefilter_df, ENTREZ_URL, ENSEMBL_URL)
+head(genefilter_df)
+```
+
+#### Generación de un fichero html
+Por último, se va a generar un fichero html con el data frame gracias al paquete *ReportingTools*.
+
+```{r, eval=doAll}
+foutput = "GSE50467_rowttests"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/differential_expression")
+
+publish(genefilter_df, htmlRep1)
+finish(htmlRep1)
+```
+
+#### Guardado del data frame
+También se procede a guardar el data frame en el subdirectorio *reports* del paquete.
+
+```{r, eval=doAll}
+save(genefilter_df, file="./reports/genefilter_df.rda", compress = "xz")
+```
+
+## T-test moderado
+Ahora se va a realizar un estudio muy similar pero en este caso se va a hacer un test-t moderado (sin suponer varianzas iguales). Para ello, se va a utilizar el paquete limma.
+
+#### Generación de la matriz de diseño
+En primer lugar, es necesario hacer una matriz de diseño con los dos grupos a comparar.
+
+```{r, eval=doAll}
+grupos= pData(Eset50467)[,"FactorValue..compound."]
+design = model.matrix(~0+grupos)
+colnames(design) = c("doxycycline", "control")
+design
+```
+
+#### Ajuste de modelo y generación de contrastes
+En segundo lugar es necesario ajustar el modelo y hacer el contraste que queremos observar: muestras con doxiciclina contra muestras control.
+
+```{r, eval=doAll}
+fit = lmFit(Eset50467, design)
+cont.matrix <- makeContrasts(doxycycline - control, levels=design)
+```
+
+#### Estimación con limma
+Por último se hace la estimación con limma utilizando la función eBayes y se ajusta el p-valor para comparaciones múltiples tanto por el método de Bonferroni como por el de Benjamini-Hochberg.  
+
+```{r, eval=doAll}
+fit2 <- contrasts.fit(fit, cont.matrix)
+fit2 <- eBayes(fit2)
+tT <- topTable(fit2, coef = 1, adjust = "BH", number = nrow(Eset50467))
+tT2 <- topTable(fit2, coef = 1, adjust = "bonferroni", number = nrow(Eset50467))
+```
+
+## Generación del data frame
+Para generar un data frame con la información más importante, es necesario quedarnos con el nombre del gen, el estadístico t, el log-fold change, el p-valor y los p-valores ajustados tanto por el método de Bonferroni como por el de Benjamini-Hochberg, además de las URL's para ENTREZ y ENSEMBL para cada gen, de tal manera que sea un data frame explicativo y con el que un investigador pueda obtener información fácil y directamente.
+
+```{r, eval=doAll}
+entrezurls = sapply(tT$ENTREZID, entrezurl)
+ensemblurls = sapply(tT$ENSEMBL, ensemblurl)
+limma_df = data.frame(SYMBOL = tT$SYMBOL, statistic = tT$t, LogFC=tT$logFC, p.value=tT$P.Value,
+                BH=tT$adj.P.Val, Bonferroni=tT2$adj.P.Val, ENTREZ_URL=entrezurls, ENSEMBL_URL=ensemblurls)
+rownames(limma_df) = tT$PROBEID
+head(limma_df)
+```
+
+#### Generación de un fichero html
+Al igual que antes, se va a generar un fichero html con el data frame gracias al paquete *ReportingTools*.
+
+```{r, eval=doAll}
+foutput = "GSE50467_limma"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/differential_expression")
+
+publish(limma_df, htmlRep1)
+finish(htmlRep1)
+```
+
+#### Guardado del data frame
+También se procede a guardar el data frame en el subdirectorio *reports* del paquete, al igual que antes.
+
+```{r, eval=doAll}
+save(limma_df, file="./reports/limma_df.rda", compress = "xz")
+```
+
+## Volcano plot
+Para observar los datos se va a realizar un Volcano plot gracias a una función incorporada en este paquete. Un volcano plot es un tipo de representación en el que como valor de abscisas se representa el log-fold change y como valor de ordenada se representa el valor opuesto al logaritmo en base 10 del p-valor. Todo esto para cada gen, de tal manera que nos hacemos una idea de todos los genes que se expresan de forma diferencial por encima de un límite establecido y con un p-valor menor a uno dado. 
+Como ejemplo se utilizará el ajuste de Benjamini-Hochberg y se marcarán aquellos genes que tengan se expresen el doble en el control o en el caso (por tanto logFC=1) y con un p-valor menor a 0.05.
+
+```{r, eval=doAll}
+plot_volcano(genefilter_df$BH, genefilter_df$LogFC, genefilter_df$SYMBOL, min_p = 0.05, diff = 1)
+```
+
+Un logFC mínimo de 1 ya indica que el gen se sobreexprese el doble en un grupo o en otro, lo que se puede considerar bastante alto. En la publicación relacionada con el estudio GSE50467, como se detalla, buscan la expresión diferencial de genes que intervengan en la diferenciación y crecimiento celular, debido a que están estudiando un adenocarcinoma pulmonar. Por esa razón, los dos genes principales en los que observan regulación son VEGFA (sobreexpresado 1.67 veces) y EGFR (subexpresado 1.87 veces).
+
+Con el procesamiento de datos hecho en este análisis se obtiene que el gen VEGFA está sobreexpresado 1.692 veces y que el gen EGFR está subexpresado 1.322 veces. Como se puede observar, para el gen VEGFA obtenemos un valor similar, pero para el gen EGFR en este caso no hay tanto cambio de expresión como afirman en la publicación.
+
+```{r, eval=doAll}
+2^(as.numeric(limma_df[limma_df$SYMBOL=="VEGFA","LogFC"]))
+1/(2^(as.numeric(limma_df[limma_df$SYMBOL=="EGFR","LogFC"])))
+```

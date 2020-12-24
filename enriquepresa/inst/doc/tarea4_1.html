@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Tarea 4_1: Análisis de sobre-representación</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: #990073
+   }
+
+   pre .number {
+     color: #099;
+   }
+
+   pre .comment {
+     color: #998;
+     font-style: italic
+   }
+
+   pre .keyword {
+     color: #900;
+     font-weight: bold
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: #d14;
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h1>Tarea 4_1: Análisis de sobre-representación</h1>
+
+<h1>Análisis de PRJNA517180</h1>
+
+<h2>Carga de paquetes</h2>
+
+<p>Se cargan todos los paquetes que van a servir a lo largo del estudio. Utilizamos la funcion p_load del paquete pacman debido a que si no está el paquete en la librería intenta descargarlo desde CRAN u otro repositorio.</p>
+
+<pre><code class="r">pacman::p_load(BiocGenerics, EnrichmentBrowser, enriquepresa, ReportingTools, SummarizedExperiment)
+</code></pre>
+
+<h2>Carga de PRJNA517180 y de los grupos de genes</h2>
+
+<p>En segundo lugar, es necesario cargar el SummarizedExperiment y el data frame con los datos de expresión diferencial obtenidos con <em>edgeR</em>. Ambos son necesarios para hacer el análisis de sobre-representación. También es necesario descargar los grupos de genes que se van a utilizar: los 3 tipos de ontologías de GO, que son Proceso Biológico (bp), Componente Celular (cc) y Función Molecular (mf).</p>
+
+<pre><code class="r">data(PRJNA517180, package = &quot;enriquepresa&quot;)
+data(edgeR_df, package = &quot;enriquepresa&quot;)
+
+cel_go_bp = getGenesets(org = &quot;cel&quot;, db = &quot;go&quot;, go.onto = &quot;BP&quot;)
+cel_go_cc = getGenesets(org = &quot;cel&quot;, db = &quot;go&quot;, go.onto = &quot;CC&quot;)
+cel_go_mf = getGenesets(org = &quot;cel&quot;, db = &quot;go&quot;, go.onto = &quot;MF&quot;)
+</code></pre>
+
+<h2>Cambios necesarios para utilizar la función sbea</h2>
+
+<p>La función <em>EnrichmentBrowser::sbea</em> necesita que se hagan varios cambios en el SummarizedExperiment.</p>
+
+<h4>Quitar filas sin identificador ENTREZ</h4>
+
+<p>En primer lugar, es necesario eliminar aquellas filas cuyos genes no tienen identificador de ENTREZ, tanto en el SummarizedExperiment como en el data frame. Por otra parte, en el SummarizedExperiment, se eliminan las filas para las cuales no hay información en el data frame obtenido con <em>edge R</em>.</p>
+
+<pre><code class="r">PRJNA517180 = PRJNA517180[which(is.na(rowData(PRJNA517180)$ENTREZID)==FALSE),]
+edgeR_df = edgeR_df[which(is.na(edgeR_df$ENTREZ_URLs)==FALSE),]
+PRJNA517180 = PRJNA517180[rownames(edgeR_df),]
+</code></pre>
+
+<h4>Quitar filas con genes repetidos</h4>
+
+<p>Hay genes en notación WORMBASE que se refieren al mismo ENTREZ. Por tanto, de estos genes solo se elige el primero que aparezca. Para ello se utiliza la función <em>BiocGenerics::match</em>.</p>
+
+<pre><code class="r">PRJNA517180 = PRJNA517180[match(unique(rowData(PRJNA517180)$ENTREZID),rowData(PRJNA517180)$ENTREZID),]
+edgeR_df = edgeR_df[match(unique(edgeR_df$ENTREZ_URLs), edgeR_df$ENTREZ_URLs),]
+</code></pre>
+
+<h4>Cambiar los nombres de las filas de PRJNA517180 y cambiar el rowData</h4>
+
+<p>También es necesario poner como <em>rownames</em> el id de ENTREZ en vez del id de WORMBASE y meter el data frame de <em>edgeR</em> como <em>rowData</em>.</p>
+
+<pre><code class="r">rownames(PRJNA517180) = rowData(PRJNA517180)[rownames(PRJNA517180),&quot;ENTREZID&quot;]
+rowData(PRJNA517180) = edgeR_df
+</code></pre>
+
+<h4>Cambios en los nombres de las columnas de rowData y colData</h4>
+
+<p>Por último, la función <em>EnrichmentBrowser::sbea</em> reconoce unos nombres en las columnas del <em>rowData</em> y <em>colData</em> determinadas.</p>
+
+<pre><code class="r">colnames(rowData(PRJNA517180)) = c(&quot;SYBMOL&quot;, &quot;FC&quot;, &quot;logCPM&quot;, &quot;PValue&quot;, &quot;ADJ.PVAL&quot;, &quot;ENTREZ_URLs&quot;, &quot;ENSEMBL_URLs&quot;)
+colnames(colData(PRJNA517180)) = c(&quot;Run&quot;, &quot;GROUP&quot;)
+</code></pre>
+
+<h2>Análisis de sobre-representación</h2>
+
+<p>La función <em>EnrichmentBrowser::sbea</em> utiliza el test de Fisher, con el SummarizedExperiment PRJNA517180 y con los tres grupos de genes de GO mencionados anteriormente.
+El p-valor que se va a utilizar como límite es 0,05.</p>
+
+<pre><code class="r">PRJNA517180.gobp = sbea(method = &quot;ora&quot;, se = PRJNA517180, gs = cel_go_bp, perm = 0, alpha = 0.05)
+PRJNA517180.gocc = sbea(method = &quot;ora&quot;, se = PRJNA517180, gs = cel_go_cc, perm = 0, alpha = 0.05)
+PRJNA517180.gomf = sbea(method = &quot;ora&quot;, se = PRJNA517180, gs = cel_go_mf, perm = 0, alpha = 0.05)
+</code></pre>
+
+<h2>Visualización de los resultados obtenidos</h2>
+
+<p>Para visualizar los datos obtenidos se va a utilizar la función <em>EnrichmentBrowser::gsRanking</em>. En dicha función, por defecto, muestra aquellos grupos para los que haya un p-valor menor a 0,05. Se cambia el nombre de las filas de dicho data frame para poder incluir las URLs a GO, como se verá a continuación.</p>
+
+<pre><code class="r">PRJNA517180.gobp = gsRanking(PRJNA517180.gobp)
+PRJNA517180.gocc = gsRanking(PRJNA517180.gocc)
+PRJNA517180.gomf = gsRanking(PRJNA517180.gomf)
+rownames(PRJNA517180.gobp) = PRJNA517180.gobp[,&quot;GENE.SET&quot;]
+rownames(PRJNA517180.gocc) = PRJNA517180.gocc[,&quot;GENE.SET&quot;]
+rownames(PRJNA517180.gomf) = PRJNA517180.gomf[,&quot;GENE.SET&quot;]
+</code></pre>
+
+<h2>Generación de un informe con reporting tools</h2>
+
+<p>Se va a generar un fichero html con el data frame gracias al paquete <em>ReportingTools</em>. Antes de ello, se va a utilizar la función <em>enriquepresa:dfGO</em> para generar un data frame con URLs para los términos de GO.</p>
+
+<pre><code class="r">PRJNA517180_ora.gobp = enriquepresa::dfGO(PRJNA517180.gobp)
+PRJNA517180_ora.gocc = enriquepresa::dfGO(PRJNA517180.gocc)
+PRJNA517180_ora.gomf = enriquepresa::dfGO(PRJNA517180.gomf)
+head(PRJNA517180_ora.gobp) #Un ejemplo de como queda con las URLs
+
+foutput = &quot;PRJNA517180_ora.gobp&quot;
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = &quot;./reports/ora&quot;)
+
+publish(PRJNA517180_ora.gobp, htmlRep1)
+finish(htmlRep1)
+
+foutput = &quot;PRJNA517180_ora.gocc&quot;
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = &quot;./reports/ora&quot;)
+
+publish(PRJNA517180_ora.gocc, htmlRep1)
+finish(htmlRep1)
+
+foutput = &quot;PRJNA517180_ora.gomf&quot;
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = &quot;./reports/ora&quot;)
+
+publish(PRJNA517180_ora.gomf, htmlRep1)
+finish(htmlRep1)
+</code></pre>
+
+<p>En el estudio realizado, que se puede consultar en <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6684318/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6684318/</a>, se ha realizado un análisis de sobre-representación similar. Tanto en ese estudio como en esta viñeta se observan algunos términos en común: respuesta inmunitaria, respuesta a estrés, términos relacionados con el citoesqueleto, y términos relacionados con el desarrollo de tejido muscular y epidérmico.
+Por tanto, este análisis de sobre-representación parece concordar con la hipótesis de partida, ya que al dejar de funcionar el gen ztf-11 se sobreexpresan genes relacionados con el desarrollo de otros tejidos que no sean tejido neuronal.</p>
+
+<h1>Análisis de GSE50467</h1>
+
+<h2>Carga de Eset50467 y de los grupos de genes</h2>
+
+<p>Se carga el ExpressionSet y los grupos de genes que se van a utilizar: los 3 tipos de ontologías de GO. El data frame con los datos de expresión diferencial no va a hacer falta porque se va a volver a realizar de forma sencilla.</p>
+
+<pre><code class="r">data(Eset50467, package = &quot;enriquepresa&quot;)
+
+hsa_go_bp = getGenesets(org = &quot;hsa&quot;, db = &quot;go&quot;, go.onto = &quot;BP&quot;)
+hsa_go_cc = getGenesets(org = &quot;hsa&quot;, db = &quot;go&quot;, go.onto = &quot;CC&quot;)
+hsa_go_mf = getGenesets(org = &quot;hsa&quot;, db = &quot;go&quot;, go.onto = &quot;MF&quot;)
+</code></pre>
+
+<h2>Generación de un SummarizedExperiment y del procedimiento de limma</h2>
+
+<p>En primer lugar es necesario transformar el ExpressionSet a SummarizedExperiment y hacer algunos cambios para poder hacer el análisis de expresión diferencial con limma: cambiar los <em>rownames</em> del SummarizedExperiment a identificadores ENTREZ y añadir un grupo al <em>colData</em> con 0 y 1.</p>
+
+<pre><code class="r">se50467 = makeSummarizedExperimentFromExpressionSet(Eset50467)
+se50467 = probe2gene(se50467)
+GROUP = c(rep(0, 6), rep(1, 6))
+colData(se50467) = cbind(colData(se50467), GROUP)
+se50467 = deAna(expr = se50467, de.method = &quot;limma&quot;)
+</code></pre>
+
+<h2>Análisis de sobre-representación</h2>
+
+<p>Como ya se ha mencionado se va a utilizar la función <em>EnrichmentBrowser::sbea</em>. Se utiliza el test de Fisher, con el SummarizedExperiment se50467 y con los tres grupos de genes de GO mencionados anteriormente.
+El p-valor que se va a utilizar como límite es 0,05.</p>
+
+<pre><code class="r">se50467.gobp = sbea(method = &quot;ora&quot;, se = se50467, gs = hsa_go_bp, perm = 0, alpha = 0.05)
+se50467.gocc = sbea(method = &quot;ora&quot;, se = se50467, gs = hsa_go_cc, perm = 0, alpha = 0.05)
+se50467.gomf = sbea(method = &quot;ora&quot;, se = se50467, gs = hsa_go_mf, perm = 0, alpha = 0.05)
+</code></pre>
+
+<h2>Visualización de los resultados obtenidos</h2>
+
+<p>Para visualizar los datos obtenidos se va a utilizar la función <em>EnrichmentBrowser::gsRanking</em>. En dicha función, por defecto, muestra aquellos grupos para los que haya un p-valor menor a 0,05. Al igual que antes, se cambia el nombre de las filas para poder introducir las URLs de GO.</p>
+
+<pre><code class="r">se50467.gobp = gsRanking(se50467.gobp)
+se50467.gocc = gsRanking(se50467.gocc)
+se50467.gomf = gsRanking(se50467.gomf)
+rownames(se50467.gobp) = se50467.gobp[,&quot;GENE.SET&quot;]
+rownames(se50467.gocc) = se50467.gocc[,&quot;GENE.SET&quot;]
+rownames(se50467.gomf) = se50467.gomf[,&quot;GENE.SET&quot;]
+</code></pre>
+
+<h2>Generación de un informe con reporting tools</h2>
+
+<p>Se va a generar un fichero html con los data frames obtenidos después del análisis de sobre-representación gracias al paquete <em>ReportingTools</em>. Antes de ello, se va a utilizar la función <em>enriquepresa:dfGO</em> para generar un data frame con URLs para los términos de GO.</p>
+
+<pre><code class="r">se50467_ora.gobp = enriquepresa::dfGO(se50467.gobp)
+se50467_ora.gocc = enriquepresa::dfGO(se50467.gocc)
+se50467_ora.gomf = enriquepresa::dfGO(se50467.gomf)
+head(se50467_ora.gobp)
+
+foutput = &quot;se50467_ora.gobp&quot;
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = &quot;./reports/ora&quot;)
+
+publish(se50467_ora.gobp, htmlRep1)
+finish(htmlRep1)
+
+foutput = &quot;se50467_ora.gocc&quot;
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = &quot;./reports/ora&quot;)
+
+publish(se50467_ora.gocc, htmlRep1)
+finish(htmlRep1)
+
+foutput = &quot;se50467_ora.gomf&quot;
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = &quot;./reports/ora&quot;)
+
+publish(se50467_ora.gomf, htmlRep1)
+finish(htmlRep1)
+</code></pre>
+
+<p>Este análisis de sobre-representación muestra que hay expresión diferencial en genes relacionados con el splicing y la modificación postraduccional de RNA, lo que es lógico debido a que el gen SRSF2 está relacionado con el splicing de RNA. Además, también han aparecido términos relacionados con la reparación del DNA y del control del ciclo celular, de forma general, lo que también es lógico debido a que se está estudiando cómo influye la sobreexpresión del gen SRSF2 en células cancerígenas, y los procesos tumorales aparecen como consecuencia de problemas en el control del ciclo celular o de la reparación del DNA.</p>
+
+</body>
+
+</html>

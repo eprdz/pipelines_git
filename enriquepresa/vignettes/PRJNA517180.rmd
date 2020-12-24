@@ -1,0 +1,114 @@
+---
+title: "PRJNA517180"
+author: "Enrique Presa"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PRJNA517180}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+doAll=FALSE
+```
+# Descarga de datos de PRJNA517180
+Los información de los datos de RNA-seq que se van a descargar se pueden encontrar en <https://www.ncbi.nlm.nih.gov/bioproject/PRJNA517180>
+En el estudio PRJNA517180 se hace un RNA-seq en individuos de *C. elegans* para estudiar la importancia del gen ztf-11 en la neurogénesis: la pérdida de ztf-11 da lugar a la sobreexpresión de genes no neuronales y se reduce la neurogénesis. En este experimento se utilizan dos grupos: un grupo control con un plásmido L4440 que no genera cambios fisiológicos, y por otra parte un grupo en el que el gen ztf-11 es silenciado por RNA de interferencia.
+
+## Descarga de todos los ficheros en formato SRA
+Se ha descargado manualmente un fichero de texto denominado *SraAccList.txt* con los *accession IDs SRR* para descargar todos los datos en formato SRA. Para que sea reproducible desde el primer momento, se va a construir este fichero. Con la opción *prefetch* del *SRA Toolkit* se descargan todos los ficheros con formato sra de la lista del fichero anterior. También se guarda el directorio de trabajo actual para utilizarlo más adelante.
+
+```{r, eval=doAll}
+wd = getwd()
+```
+
+```{Bash, eval=doAll}
+echo -e "SRR8489772\nSRR8489773\nSRR8489774\nSRR8489775\nSRR8489776\nSRR8489777\nSRR8489778\nSRR8489779" > SraAccList.txt
+
+prefetch --option-file SraAccList.txt
+```
+
+## Conversión a formato fastq
+Una vez descargados, *SRA Toolkit* hace un subdirectorio en HOME, así que se cambia el directorio de trabajo ahí y se utiliza *fastq-dump* con todas las secuencias para transformarlas a ficheros fastq. En este estudio se utilizaron *paired-reads*, así que hay que utilizar la opción *split files*. Se borran los ficheros SRA.
+
+```{Bash, eval=doAll}
+cd /$HOME/ncbi/public/sra
+for fichero in `ls .`; do fastq-dump -I --split-files $fichero; done
+rm *.sra
+```
+
+## Descarga del genoma de referencia
+Por otra parte, hay que descargar el genoma de referencia a utilizar. En este estudio se ha utilizado el genoma de *C. elegans*. Por comodidad, se descargará en el directorio del que cuelga el directorio con los ficheros fastq.
+
+```{Bash, eval=doAll}
+cd /$HOME/ncbi/public
+wget ftp://igenome:G3nom3s4u@ussd-ftp.illumina.com/Caenorhabditis_elegans/Ensembl/WBcel235/Caenorhabditis_elegans_Ensembl_WBcel235.tar.gz
+gzip -d Caenorhabditis_elegans_Ensembl_WBcel235.tar.gz
+tar xvf Caenorhabditis_elegans_Ensembl_WBcel235.tar
+```
+
+## Mapeo de reads con el mapeador Bowtie2
+Para mapear, se utiliza Bowtie2. Para ello, del directorio del que cuelga el subdirectorio con el genoma de referencia y el subdirectorio con las reads en formato fastq, se crea otro subdirectorio denominado *aligned* en el que se incorporarán los ficheros SAM generados. Por otra parte, se eliminan los ficheros fastq.
+
+```{Bash, eval=doAll}
+cd /$HOME/ncbi/public
+mkdir aligned
+
+for fichero in `ls sra/ | grep -o -E ^[A-Z0-9]+ | sort -u`; do bowtie2 -x Caenorhabditis_elegans/Ensembl/WBcel235/Sequence/Bowtie2Index/genome -1 sra/`echo $fichero`_1.fastq -2 sra/`echo $fichero`_2.fastq -S aligned/`echo $fichero`.sam;done
+rm sra/*.fastq
+```
+
+## Conversión a ficheros bam
+Se pasa a formato BAM gracias a *Samtools* y después también se borran los ficheros SAM. Más adelante, para hacer los conteos de reads mapeados, se necesita un fichero de texto con el nombre de todos los ficheros BAM generados.
+
+```{Bash, eval=doAll}
+cd /$HOME/ncbi/public/aligned
+
+for fichero in `ls . | grep -o -E "[A-Z]+[0-9]+"`; do samtools view -bS `echo $fichero`.sam | samtools sort -o `echo $fichero`.bam; rm `echo $fichero`.sam; done
+
+ls *.bam > bamfiles.txt
+```
+
+## Conteos de reads alineadas
+Para ello ya se utiliza R. En concreto los paquetes *Rsamtools*, *GenomicFeatures* y *GenomicAlignments*. En el *colData* se meten las variables fenotípicas. En este experimento solo será necesario incorporar el SRR bajo el nombre de columna *Run* y por otra parte el tipo de muestra: si bien el individuo era un mutante knockdown del gen ztf-11 o era individuo del grupo control, denominado según el vector control L4440.
+
+```{r, eval=doAll}
+pacman::p_load(Rsamtools, GenomicFeatures, GenomicAlignments)
+setwd("~/ncbi/public")
+gtfFile = "Caenorhabditis_elegans/Ensembl/WBcel235/Annotation/Genes/genes.gtf"
+txdb = makeTxDbFromGFF(gtfFile, format="gtf")
+genes = exonsBy(txdb, by="gene")
+
+setwd("~/ncbi/public/aligned")
+dirActualData =  paste(getwd(),"/",sep="")
+sampleTableSingle = read.table("bamfiles.txt")
+fls = paste(dirActualData,sampleTableSingle[,1],sep="")
+bamLst = BamFileList(fls, index=character(),yieldSize=100000,obeyQname=TRUE)
+PRJNA517180 = summarizeOverlaps(features = genes,read=bamLst,
+   mode="Union",
+      singleEnd=FALSE,
+      ignore.strand=TRUE,
+      fragments=TRUE) 
+Run = c("SRR8489772", "SRR8489773", "SRR8489774", "SRR8489775", "SRR8489776", "SRR8489777", "SRR8489778", "SRR8489779")
+
+type = c(rep(0, 4), rep(1, 4))
+type = factor(type, levels=0:1, labels=c("L4440", "ztf_11_KD"))
+colData(PRJNA517180) = DataFrame(Run, type)
+```
+
+# Generación de un rowData
+Antes de hacer el informe, es necesario hacer un *rowData* con diferentes identificadores de todos los genes. Esto será útil más adelante para hacer los informes con diferentes URLs a bases de datos con *ReportingTools*, y para el proceso de sobre-representación. Después, se guardará el SummarizedExperiment en un fichero Rdata.
+
+```{r, eval=doAll}
+pacman::p_load(AnnotationDbi, org.Ce.eg.db)
+annot = AnnotationDbi::select(org.Ce.eg.db, keys=rownames(assay(PRJNA517180)),
+                              column = c("SYMBOL", "ENTREZID", "ENSEMBL"), keytype="WORMBASE")
+uniq = match(rownames(assay(PRJNA517180)),annot[,1])
+rowData(PRJNA517180)=annot[uniq,]
+save(PRJNA517180, file=paste0(wd,"/PRJNA517180.rda"))
+```

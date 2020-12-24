@@ -1,0 +1,22 @@
+Package: enriquepresa
+Type: Package
+Title: enriquepresa
+Version: 1.0.0
+Date: "`r Sys.Date()`"
+Authors@R: person("Enrique", "Presa", email = "enpre@alumni.uv.es", role = c("aut", "cre"))
+Description: Package that include Agilent expression data from experiment GSE50467 that has been background-corrected and normalized thanks to limma package, and that has passed some quality controls (analysis of MAplots and boxplots, mainly). Also, with feature data and with phenotipic data from the experiment, the Expression Set has been generated. This package also include the differential expression analysis done with equal variances (using genefilter package) and with a moderated t-test (limma package), and different important functions to achieve these analyses. In addition, an RNA-seq experiment, PRJNA517180, has been also included. In this case, the differential expression analysis has been done with edgeR package. Last but not least, a functional enrichment analysis for GSE50467 and for PRJNA517180 has been done, both by Gene Set Analysis and with Fisher's test. In the case of Gene Set Analysis both self-contained null hypothesis and competitive null hypothesis have been used. 
+Imports: AnnotationDbi, Biobase, BiocGenerics, dplyr, edgeR,
+        EnrichmentBrowser, genefilter, GenomicAlignments,
+        GenomicFeatures, GEOquery, graphics, hgug4112a.db, limma,
+        org.Ce.eg.db, pacman, ReportingTools, Rsamtools,
+        SummarizedExperiment, tami, tidyr
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+License: GPL-2
+LazyLoad: yes
+RoxygenNote: 7.1.0
+NeedsCompilation: no
+Maintainer: Enrique Presa <enpre@alumni.uv.es>
+Packaged: 2020-06-23 23:56:33 UTC; root
+Author: Enrique Presa [aut, cre]
+Depends: R (>= 3.5.0)
