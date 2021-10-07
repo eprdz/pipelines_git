@@ -1,0 +1,209 @@
+---
+title: "tarea4_1"
+author: "Enrique Presa"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tarea4_1}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+doAll=FALSE
+```
+
+# Tarea 4_1: Análisis de sobre-representación
+# Análisis de PRJNA517180
+## Carga de paquetes
+Se cargan todos los paquetes que van a servir a lo largo del estudio. Utilizamos la funcion p_load del paquete pacman debido a que si no está el paquete en la librería intenta descargarlo desde CRAN u otro repositorio.
+
+```{r, eval=doAll, results="hide"}
+pacman::p_load(BiocGenerics, EnrichmentBrowser, enriquepresa, ReportingTools, SummarizedExperiment)
+```
+
+## Carga de PRJNA517180 y de los grupos de genes
+En segundo lugar, es necesario cargar el SummarizedExperiment y el data frame con los datos de expresión diferencial obtenidos con *edgeR*. Ambos son necesarios para hacer el análisis de sobre-representación. También es necesario descargar los grupos de genes que se van a utilizar: los 3 tipos de ontologías de GO, que son Proceso Biológico (bp), Componente Celular (cc) y Función Molecular (mf).
+
+```{r, eval=doAll, warning=FALSE, message=FALSE}
+data(PRJNA517180, package = "enriquepresa")
+data(edgeR_df, package = "enriquepresa")
+
+cel_go_bp = getGenesets(org = "cel", db = "go", go.onto = "BP")
+cel_go_cc = getGenesets(org = "cel", db = "go", go.onto = "CC")
+cel_go_mf = getGenesets(org = "cel", db = "go", go.onto = "MF")
+```
+
+## Cambios necesarios para utilizar la función sbea
+La función *EnrichmentBrowser::sbea* necesita que se hagan varios cambios en el SummarizedExperiment.
+
+#### Quitar filas sin identificador ENTREZ
+En primer lugar, es necesario eliminar aquellas filas cuyos genes no tienen identificador de ENTREZ, tanto en el SummarizedExperiment como en el data frame. Por otra parte, en el SummarizedExperiment, se eliminan las filas para las cuales no hay información en el data frame obtenido con *edge R*.
+
+```{r, eval=doAll}
+PRJNA517180 = PRJNA517180[which(is.na(rowData(PRJNA517180)$ENTREZID)==FALSE),]
+edgeR_df = edgeR_df[which(is.na(edgeR_df$ENTREZ_URLs)==FALSE),]
+PRJNA517180 = PRJNA517180[rownames(edgeR_df),]
+```
+
+#### Quitar filas con genes repetidos
+Hay genes en notación WORMBASE que se refieren al mismo ENTREZ. Por tanto, de estos genes solo se elige el primero que aparezca. Para ello se utiliza la función *BiocGenerics::match*.
+
+```{r, eval=doAll}
+PRJNA517180 = PRJNA517180[match(unique(rowData(PRJNA517180)$ENTREZID),rowData(PRJNA517180)$ENTREZID),]
+edgeR_df = edgeR_df[match(unique(edgeR_df$ENTREZ_URLs), edgeR_df$ENTREZ_URLs),]
+```
+
+#### Cambiar los nombres de las filas de PRJNA517180 y cambiar el rowData
+También es necesario poner como *rownames* el id de ENTREZ en vez del id de WORMBASE y meter el data frame de *edgeR* como *rowData*.
+
+```{r, eval=doAll}
+rownames(PRJNA517180) = rowData(PRJNA517180)[rownames(PRJNA517180),"ENTREZID"]
+rowData(PRJNA517180) = edgeR_df
+```
+
+#### Cambios en los nombres de las columnas de rowData y colData
+Por último, la función *EnrichmentBrowser::sbea* reconoce unos nombres en las columnas del *rowData* y *colData* determinadas.
+
+```{r, eval=doAll}
+colnames(rowData(PRJNA517180)) = c("SYBMOL", "FC", "logCPM", "PValue", "ADJ.PVAL", "ENTREZ_URLs", "ENSEMBL_URLs")
+colnames(colData(PRJNA517180)) = c("Run", "GROUP")
+```
+
+## Análisis de sobre-representación
+La función *EnrichmentBrowser::sbea* utiliza el test de Fisher, con el SummarizedExperiment PRJNA517180 y con los tres grupos de genes de GO mencionados anteriormente.
+El p-valor que se va a utilizar como límite es 0,05.
+
+```{r, eval=doAll}
+PRJNA517180.gobp = sbea(method = "ora", se = PRJNA517180, gs = cel_go_bp, perm = 0, alpha = 0.05)
+PRJNA517180.gocc = sbea(method = "ora", se = PRJNA517180, gs = cel_go_cc, perm = 0, alpha = 0.05)
+PRJNA517180.gomf = sbea(method = "ora", se = PRJNA517180, gs = cel_go_mf, perm = 0, alpha = 0.05)
+```
+
+## Visualización de los resultados obtenidos
+Para visualizar los datos obtenidos se va a utilizar la función *EnrichmentBrowser::gsRanking*. En dicha función, por defecto, muestra aquellos grupos para los que haya un p-valor menor a 0,05. Se cambia el nombre de las filas de dicho data frame para poder incluir las URLs a GO, como se verá a continuación.
+
+```{r, eval=doAll}
+PRJNA517180.gobp = gsRanking(PRJNA517180.gobp)
+PRJNA517180.gocc = gsRanking(PRJNA517180.gocc)
+PRJNA517180.gomf = gsRanking(PRJNA517180.gomf)
+rownames(PRJNA517180.gobp) = PRJNA517180.gobp[,"GENE.SET"]
+rownames(PRJNA517180.gocc) = PRJNA517180.gocc[,"GENE.SET"]
+rownames(PRJNA517180.gomf) = PRJNA517180.gomf[,"GENE.SET"]
+```
+
+## Generación de un informe con reporting tools
+Se va a generar un fichero html con el data frame gracias al paquete *ReportingTools*. Antes de ello, se va a utilizar la función *enriquepresa:dfGO* para generar un data frame con URLs para los términos de GO.
+
+```{r, eval=doAll, warning=FALSE, message=FALSE}
+PRJNA517180_ora.gobp = enriquepresa::dfGO(PRJNA517180.gobp)
+PRJNA517180_ora.gocc = enriquepresa::dfGO(PRJNA517180.gocc)
+PRJNA517180_ora.gomf = enriquepresa::dfGO(PRJNA517180.gomf)
+head(PRJNA517180_ora.gobp) #Un ejemplo de como queda con las URLs
+
+foutput = "PRJNA517180_ora.gobp"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/ora")
+
+publish(PRJNA517180_ora.gobp, htmlRep1)
+finish(htmlRep1)
+
+foutput = "PRJNA517180_ora.gocc"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/ora")
+
+publish(PRJNA517180_ora.gocc, htmlRep1)
+finish(htmlRep1)
+
+foutput = "PRJNA517180_ora.gomf"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/ora")
+
+publish(PRJNA517180_ora.gomf, htmlRep1)
+finish(htmlRep1)
+```
+
+En el estudio realizado, que se puede consultar en <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6684318/>, se ha realizado un análisis de sobre-representación similar. Tanto en ese estudio como en esta viñeta se observan algunos términos en común: respuesta inmunitaria, respuesta a estrés, términos relacionados con el citoesqueleto, y términos relacionados con el desarrollo de tejido muscular y epidérmico.
+Por tanto, este análisis de sobre-representación parece concordar con la hipótesis de partida, ya que al dejar de funcionar el gen ztf-11 se sobreexpresan genes relacionados con el desarrollo de otros tejidos que no sean tejido neuronal.
+
+# Análisis de GSE50467
+## Carga de Eset50467 y de los grupos de genes
+Se carga el ExpressionSet y los grupos de genes que se van a utilizar: los 3 tipos de ontologías de GO. El data frame con los datos de expresión diferencial no va a hacer falta porque se va a volver a realizar de forma sencilla.
+
+```{r, eval=doAll, warning=FALSE, message=FALSE}
+data(Eset50467, package = "enriquepresa")
+
+hsa_go_bp = getGenesets(org = "hsa", db = "go", go.onto = "BP")
+hsa_go_cc = getGenesets(org = "hsa", db = "go", go.onto = "CC")
+hsa_go_mf = getGenesets(org = "hsa", db = "go", go.onto = "MF")
+```
+
+## Generación de un SummarizedExperiment y del procedimiento de limma
+En primer lugar es necesario transformar el ExpressionSet a SummarizedExperiment y hacer algunos cambios para poder hacer el análisis de expresión diferencial con limma: cambiar los *rownames* del SummarizedExperiment a identificadores ENTREZ y añadir un grupo al *colData* con 0 y 1.
+
+```{r, eval=doAll, warning=FALSE, message=FALSE}
+se50467 = makeSummarizedExperimentFromExpressionSet(Eset50467)
+se50467 = probe2gene(se50467)
+GROUP = c(rep(0, 6), rep(1, 6))
+colData(se50467) = cbind(colData(se50467), GROUP)
+se50467 = deAna(expr = se50467, de.method = "limma")
+```
+
+## Análisis de sobre-representación
+Como ya se ha mencionado se va a utilizar la función *EnrichmentBrowser::sbea*. Se utiliza el test de Fisher, con el SummarizedExperiment se50467 y con los tres grupos de genes de GO mencionados anteriormente.
+El p-valor que se va a utilizar como límite es 0,05.
+
+```{r, eval=doAll}
+se50467.gobp = sbea(method = "ora", se = se50467, gs = hsa_go_bp, perm = 0, alpha = 0.05)
+se50467.gocc = sbea(method = "ora", se = se50467, gs = hsa_go_cc, perm = 0, alpha = 0.05)
+se50467.gomf = sbea(method = "ora", se = se50467, gs = hsa_go_mf, perm = 0, alpha = 0.05)
+```
+
+## Visualización de los resultados obtenidos
+Para visualizar los datos obtenidos se va a utilizar la función *EnrichmentBrowser::gsRanking*. En dicha función, por defecto, muestra aquellos grupos para los que haya un p-valor menor a 0,05. Al igual que antes, se cambia el nombre de las filas para poder introducir las URLs de GO.
+
+```{r, eval=doAll}
+se50467.gobp = gsRanking(se50467.gobp)
+se50467.gocc = gsRanking(se50467.gocc)
+se50467.gomf = gsRanking(se50467.gomf)
+rownames(se50467.gobp) = se50467.gobp[,"GENE.SET"]
+rownames(se50467.gocc) = se50467.gocc[,"GENE.SET"]
+rownames(se50467.gomf) = se50467.gomf[,"GENE.SET"]
+```
+
+## Generación de un informe con reporting tools
+Se va a generar un fichero html con los data frames obtenidos después del análisis de sobre-representación gracias al paquete *ReportingTools*. Antes de ello, se va a utilizar la función *enriquepresa:dfGO* para generar un data frame con URLs para los términos de GO.
+
+```{r, eval=doAll, warning=FALSE, message=FALSE}
+se50467_ora.gobp = enriquepresa::dfGO(se50467.gobp)
+se50467_ora.gocc = enriquepresa::dfGO(se50467.gocc)
+se50467_ora.gomf = enriquepresa::dfGO(se50467.gomf)
+head(se50467_ora.gobp)
+
+foutput = "se50467_ora.gobp"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/ora")
+
+publish(se50467_ora.gobp, htmlRep1)
+finish(htmlRep1)
+
+foutput = "se50467_ora.gocc"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/ora")
+
+publish(se50467_ora.gocc, htmlRep1)
+finish(htmlRep1)
+
+foutput = "se50467_ora.gomf"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/ora")
+
+publish(se50467_ora.gomf, htmlRep1)
+finish(htmlRep1)
+```
+
+Este análisis de sobre-representación muestra que hay expresión diferencial en genes relacionados con el splicing y la modificación postraduccional de RNA, lo que es lógico debido a que el gen SRSF2 está relacionado con el splicing de RNA. Además, también han aparecido términos relacionados con la reparación del DNA y del control del ciclo celular, de forma general, lo que también es lógico debido a que se está estudiando cómo influye la sobreexpresión del gen SRSF2 en células cancerígenas, y los procesos tumorales aparecen como consecuencia de problemas en el control del ciclo celular o de la reparación del DNA.

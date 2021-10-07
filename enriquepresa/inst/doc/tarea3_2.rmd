@@ -1,0 +1,110 @@
+---
+title: "tarea3_2"
+author: "Enrique Presa"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tarea3_2}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+doAll=FALSE
+```
+
+# Tarea 3_2: Expresión diferencial con edgeR
+## Carga de paquetes
+Se cargan todos los paquetes que van a servir a lo largo del estudio. Utilizamos la funcion p_load del paquete pacman debido a que si no está el paquete en la librería intenta descargarlo desde CRAN u otro repositorio. También se guarda el directorio de trabajo en una variable para utilizarlo más adelante.
+
+```{r, eval=doAll, results="hide"}
+pacman::p_load(edgeR, enriquepresa, ReportingTools, SummarizedExperiment)
+wd = getwd()
+```
+
+## Generación del objeto DGEList
+En primer lugar, se carga el SummarizedExperiment y se eligen los grupos a comparar. Como ya se ha mencionado anteriormente se van a comparar las muestras control (con el vector L4440) con las muestras con el gen ztf-11 silenciado. Por último se hace el objeto DGEList.
+
+```{r, eval=doAll}
+data(PRJNA517180, package = "enriquepresa")
+grupos = colData(PRJNA517180)[,"type"]
+
+x = DGEList(counts = assay(PRJNA517180), group = grupos)
+```
+
+## Eliminación de genes con pocos conteos
+Como al final se va a utilizar una dispersión diferente para cada gen, ya que suponer una misma dispersión sobre una cantidad grande de genes no es muy razonable, se van a eliminar aquellos genes que tengan pocos conteos de tal manera que el coeficiente de variación de cada gen sea menor. Además, se ha observado que hay más genes con expresión diferencial y con un FDR más alto si se eliminan los genes con pocos conteos.
+
+```{r, eval=doAll}
+keep = rowSums(cpm(x) > 1) >= 2
+x <- x[keep, , keep.lib.sizes = FALSE]
+```
+
+## Cálculo de la dispersión común y la dispersión por gen
+Lo siguiente será calcular la dispersión común y la dispersión por gen.
+
+```{r, eval=doAll}
+dge.c = estimateCommonDisp(x)
+dge.t = estimateTagwiseDisp(dge.c)
+```
+
+## Cálculo del test exacto
+El test exacto se calcula para la diferencia de medias entre dos grupos de conteos bajo una distribución binomial negativa. Por último, gracias a la función topTags se registran en una tabla los resultados.
+
+```{r, eval=doAll}
+et.t = exactTest(dge.t)
+df = topTags(et.t, n=nrow(et.t$table))
+df = df$table
+```
+
+## Generación del informe
+Al igual que en el caso del estudio en microarrays, para que se pueda disponer de la información de manera más informativa, se van a añadir diferentes enlaces de ENTREZ y ENSEMBL al data frame generado con los genes expresados diferencialmente. Para ello se utilizará el *rowData* incorporado en la viñeta *tarea3_1*.
+
+```{r, eval=doAll}
+SYMBOL = rowData(PRJNA517180)[rownames(df),"SYMBOL"]
+ENTREZ_URLs = sapply(rowData(PRJNA517180)[rownames(df),"ENTREZID"], entrezurl)
+ENSEMBL_URLs = sapply(rowData(PRJNA517180)[rownames(df),"ENSEMBL"], ensemblurl)
+df = cbind(SYMBOL, df, ENTREZ_URLs, ENSEMBL_URLs)
+```
+
+## Generación de un informe html
+Se va a generar un fichero html con el data frame gracias al paquete *ReportingTools*.
+
+```{r, eval=doAll, warning=FALSE, message=FALSE}
+foutput = "PRJNA517180"
+htmlRep1 = HTMLReport(shortName = foutput,title = foutput,
+                      reportDirectory = "./reports/differential_expression")
+
+publish(df, htmlRep1)
+finish(htmlRep1)
+```
+
+## Guardado del data frame
+En el directorio *reports* se va a proceder a guardar este data frame con el resultado de la expresión diferencial.
+
+```{r, eval=doAll}
+
+edgeR_df = df
+dirReports = paste0(wd,"/reports/")
+save(edgeR_df, file=paste0(dirReports,"edgeR_df.rda"))
+```
+
+## Volcano plot
+Al igual que en el caso del experimento de microarrays, en este experimento de RNA-seq se puede utilizar la funcion *enriquepresa::plot_volcano* incorporada en este paquete para observar en un gráfico los genes que se encuentran expresados diferencialmente.
+
+```{r, eval=doAll}
+plot_volcano(edgeR_df$FDR, edgeR_df$logFC, edgeR_df$SYMBOL, 0.05, 1)
+```
+
+Como se puede observar, son muchos los genes que se encuentran sobreexpresados (224 genes para un p-valor menor a 0.05 y un *logFC* mayor a 1) y muy pocos los genes que se encuentran subexpresados (10 genes para un p-valor menor a 0.05 y un *logFC* menor a -1). Por tanto, se podría pensar que la inactivación del gen ztf-11 genera la activación de una gran cantidad de genes relacionados con la diferenciación a tejidos no neuronales, y también la inactivación de unos pocos genes relacionados con la diferenciación neuronal.
+
+```{r, eval=doAll}
+sum(edgeR_df$FDR < 0.05 & edgeR_df$logFC > 1) #Número de genes sobreexpresados
+sum(edgeR_df$FDR < 0.05 & edgeR_df$logFC < -1) #Número de genes subexpresados
+```
+
+Para obtener conclusiones más claras, en las viñetas *tarea4_1* y *tarea4_2* se ha realizado un análisis de sobre-representación y un análisis de grupos de genes, respectivamente.

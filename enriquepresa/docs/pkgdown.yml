@@ -1,0 +1,12 @@
+pandoc: '2.5'
+pkgdown: 1.5.1
+pkgdown_sha: ~
+articles:
+  PRJNA517180: PRJNA517180.html
+  tarea1: tarea1.html
+  tarea2: tarea2.html
+  tarea3_2: tarea3_2.html
+  tarea4_1: tarea4_1.html
+  tarea4_2: tarea4_2.html
+last_built: 2020-06-23T23:52Z
+
