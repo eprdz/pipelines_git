@@ -1,0 +1,10 @@
+    This repository has different pipelines and projects done during my MSc in Bioinformatics:
+    -sPLS:
+            -regression_analysis.R --> sPLS pipeline for continuous responses.
+            -discriminant_analysis.R --> sPLS-DA pipeline for discriminant responses.
+            -multiomics_correlations.R --> sPLS between omics to create pearson correlations and create a graph.
+    -ml.python: assignments done in the machinle learning in python course.
+    -ancomii: adaptation of ANCOMII paper in order to create a method to detect bacteria with differential presence in samples.
+    -basic_diff.expression: a basic project of RNA-seq analysis.
+
+
